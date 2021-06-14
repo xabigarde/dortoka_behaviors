@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="simple_go_forward">
+
+	<executable package_path="dortoka_flexbe_behaviors.simple_go_forward_sm" class="simple_go_forwardSM" />
+	<tagstring>tutorial</tagstring>
+	<author>Xabi</author>
+	<date>Fri Jun 11 2021</date>
+	<description>
+		enalbes robot to go fwd
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="my_speed" default="0.4" label="my_speed" hint="Sets the my_speed">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="travel_distance" default="0.3" label="travel_distance" hint="Sets the travel_distance">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="obstacle_distance" default="1.5" label="obstacle_distance" hint="Sets the obstacle_distance">
+			<min value="0" />
+			<max value="2" />
+		</param>
+
+	</params>
+
+
+</behavior>
