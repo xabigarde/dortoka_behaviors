@@ -2,48 +2,63 @@
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
 
-# example import of required action
-from chores.msg import DoDishesAction, DoDishesGoal
+import actionlib
+from kobuki_msgs.msg import AutoDockingAction, AutoDockingGoal
+from actionlib_msgs.msg import GoalStatus
 
 
-class ExampleActionState(EventState):
+class AutodockState(EventState):
 	'''
-	Actionlib actions are the most common basis for state implementations
-	since they provide a non-blocking, high-level interface for robot capabilities.
-	The example is based on the DoDishes-example of actionlib (see http://wiki.ros.org/actionlib).
-	This time we have input and output keys in order to specify the goal and possibly further evaluate the result in a later state.
-
-	-- dishes_to_do int 	Expected amount of dishes to be cleaned.
-
-	># dishwasher 	int 	ID of the dishwasher to be used.
-
-	#> cleaned 		int 	Amount of cleaned dishes.
-
-	<= cleaned_some 		Only a few dishes have been cleaned.
-	<= cleaned_enough		Cleaned a lot of dishes.
-	<= command_error		Cannot send the action goal.
-
+	Automatically docks
 	'''
 
-	def __init__(self, dishes_to_do):
+	def __init__(self):
 		# See example_state.py for basic explanations.
-		super(ExampleActionState, self).__init__(outcomes = ['cleaned_some', 'cleaned_enough', 'command_error'],
-												 input_keys = ['dishwasher'],
-												 output_keys = ['cleaned'])
-
-		self._dishes_to_do = dishes_to_do
+		super(AutodockState, self).__init__(outcomes = ['done', 'failed'])
 
 		# Create the action client when building the behavior.
 		# This will cause the behavior to wait for the client before starting execution
 		# and will trigger a timeout error if it is not available.
 		# Using the proxy client provides asynchronous access to the result and status
 		# and makes sure only one client is used, no matter how often this state is used in a behavior.
-		self._topic = 'do_dishes'
-		self._client = ProxyActionClient({self._topic: DoDishesAction}) # pass required clients as dict (topic: type)
+		self._topic = 'dock_drive_action'
+		self._client = ProxyActionClient({self._topic: AutoDockingAction}) # pass required clients as dict (topic: type)
 
 		# It may happen that the action client fails to send the action goal.
 		self._error = False
 
+	def doneCb(self, status, result):
+		if 0:
+			print ''
+		elif status == GoalStatus.PENDING:
+			state = 'PENDING'
+		elif status == GoalStatus.ACTIVE:
+			state = 'ACTIVE'
+		elif status == GoalStatus.PREEMPTED:
+			state = 'PREEMPTED'
+		elif status == GoalStatus.SUCCEEDED:
+			state = 'SUCCEEDED'
+		elif status == GoalStatus.ABORTED:
+			state = 'ABORTED'
+		elif status == GoalStatus.REJECTED:
+			state = 'REJECTED'
+		elif status == GoalStatus.PREEMPTING:
+			state = 'PREEMPTING'
+		elif status == GoalStatus.RECALLING:
+			state = 'RECALLING'
+		elif status == GoalStatus.RECALLED:
+			state = 'RECALLED'
+		elif status == GoalStatus.LOST:
+			state = 'LOST'
+		# Print state of action server
+		print 'Result - [ActionServer: ' + state + ']: ' + result.text
+
+	def activeCb(self):
+		if 0: print 'Action server went active.'
+
+	def feedbackCb(self, feedback):
+		# Print state of dock_drive module (or node.)
+		print 'Feedback: [DockDrive: ' + feedback.state + ']: ' + feedback.text
 
 	def execute(self, userdata):
 		# While this state is active, check if the action has been finished and evaluate the result.
@@ -55,16 +70,8 @@ class ExampleActionState(EventState):
 		# Check if the action has been finished
 		if self._client.has_result(self._topic):
 			result = self._client.get_result(self._topic)
-			dishes_cleaned = result.total_dishes_cleaned
 
-			# In this example, we also provide the amount of cleaned dishes as output key.
-			userdata.cleaned = dishes_cleaned
-
-			# Based on the result, decide which outcome to trigger.
-			if dishes_cleaned > self._dishes_to_do:
-				return 'cleaned_enough'
-			else:
-				return 'cleaned_some'
+			return 'done'
 
 		# If the action has not yet finished, no outcome will be returned and the state stays active.
 		
@@ -72,22 +79,17 @@ class ExampleActionState(EventState):
 	def on_enter(self, userdata):
 		# When entering this state, we send the action goal once to let the robot start its work.
 
-		# As documented above, we get the specification of which dishwasher to use as input key.
-		# This enables a previous state to make this decision during runtime and provide the ID as its own output key.
-		dishwasher_id = userdata.dishwasher
-
 		# Create the goal.
-		goal = DoDishesGoal()
-		goal.dishwasher_id = dishwasher_id
+		goal = AutoDockingGoal()
 
 		# Send the goal.
 		self._error = False # make sure to reset the error state since a previous state execution might have failed
 		try:
-			self._client.send_goal(self._topic, goal)
+			self._client.send_goal(goal, self.doneCb, self.activeCb, self.feedbackCb)
 		except Exception as e:
 			# Since a state failure not necessarily causes a behavior failure, it is recommended to only print warnings, not errors.
 			# Using a linebreak before appending the error log enables the operator to collapse details in the GUI.
-			Logger.logwarn('Failed to send the DoDishes command:\n%s' % str(e))
+			Logger.logwarn('Failed to send the AutoDocking command:\n%s' % str(e))
 			self._error = True
 
 
