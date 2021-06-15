@@ -16,7 +16,7 @@
 	<!-- Available Parameters -->
 	<params>
 
-		<param type="numeric" name="turning_angle" default="0" label="turning_angle" hint="Sets the turning_angle">
+		<param type="numeric" name="turning_angle" default="90" label="turning_angle" hint="Sets the turning_angle">
 			<min value="-90" />
 			<max value="90" />
 		</param>
@@ -31,14 +31,19 @@
 			<max value="5" />
 		</param>
 
-		<param type="numeric" name="travel_distance" default="4" label="travel_distance" hint="Sets the travel_distance">
+		<param type="numeric" name="travel_distance" default="1.0" label="travel_distance" hint="Sets the travel_distance">
 			<min value="0" />
-			<max value="10" />
+			<max value="10.0" />
 		</param>
 
-		<param type="numeric" name="obstacle_distance" default="0" label="obstacle_distance" hint="Sets the obstacle_distance">
+		<param type="numeric" name="obstacle_distance" default="0.4" label="obstacle_distance" hint="Sets the obstacle_distance">
 			<min value="0" />
-			<max value="1" />
+			<max value="1.0" />
+		</param>
+
+		<param type="numeric" name="total_turns" default="4" label="total_turns" hint="Sets the total_turns">
+			<min value="0" />
+			<max value="8" />
 		</param>
 
 	</params>

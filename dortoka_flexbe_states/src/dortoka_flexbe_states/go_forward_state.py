@@ -15,7 +15,7 @@ class GoForwardState(EventState):
         self._obstacle_dist = obstacle_dist
 
         self.vel_topic = '/cmd_vel_mux/input/teleop'
-        self.scan_topic = '/kobuki/laser/scan'
+        self.scan_topic = '/scan'
 
         self.pub = ProxyPublisher({self.vel_topic:Twist})
         self.scan_sub = ProxySubscriberCached({self.scan_topic: LaserScan})
@@ -26,14 +26,16 @@ class GoForwardState(EventState):
             return 'failed'
 
         if (self.data is not None):
-            Logger.loginfo("PWD obstacle distance is: %s" % self.data.ranges[360])
-            if self.data.ranges[360] <= self._obstacle_dist: 
+            Logger.loginfo("PWD obstacle distance is: %s" % self.data.ranges[424])
+            if self.data.ranges[424] <= self._obstacle_dist: 
                 return 'failed'
 
-            elapsed_time = (rospy.Time.now() - self._start_time).to_sec()
-            distance_travelled = (elapsed_time/ 60.0) * self._speed
+        elapsed_time = (rospy.Time.now() - self._start_time).to_sec()
+        distance_travelled = (elapsed_time) * self._speed
 
-            if distance_travelled >= self._travel_dist: 
+        Logger.loginfo("Distance travelled: %s" % distance_travelled)
+
+        if distance_travelled >= self._travel_dist: 
                 return 'done'
 
         self.pub.publish(self.vel_topic, self.cmd_pub)

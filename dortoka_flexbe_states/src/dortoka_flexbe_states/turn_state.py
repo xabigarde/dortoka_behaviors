@@ -50,6 +50,7 @@ class TurnState(EventState):
             if result_val == "done":
                 #set the output value to the input value
                 userdata.data_OUT = userdata.data_IN
+		self._state_machine.userdata.turns_done++
                 return 'done'
             else:
                 return 'failed'
