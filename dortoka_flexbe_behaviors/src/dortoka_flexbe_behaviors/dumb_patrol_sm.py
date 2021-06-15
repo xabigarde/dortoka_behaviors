@@ -10,7 +10,6 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from dortoka_flexbe_states.go_forward_state import GoForwardState
 from dortoka_flexbe_states.turn_state import TurnState
-from flexbe_states.check_condition_state import CheckConditionState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -71,18 +70,11 @@ class dumb_patrolSM(Behavior):
 										transitions={'failed': 'failed', 'done': 'Turn'},
 										autonomy={'failed': Autonomy.Off, 'done': Autonomy.Off})
 
-			# x:840 y:217
+			# x:752 y:174
 			OperatableStateMachine.add('Turn',
 										TurnState(turn_angle=self.turning_angle, t_speed=self.turning_speed),
-										transitions={'done': 'keep on', 'failed': 'failed'},
+										transitions={'done': 'Drive Forward', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
-
-			# x:258 y:307
-			OperatableStateMachine.add('keep on',
-										CheckConditionState(predicate=keep_turnin),
-										transitions={'true': 'Drive Forward', 'false': 'finished'},
-										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
-										remapping={'input_value': 'turns_done'})
 
 
 		return _state_machine
@@ -92,11 +84,7 @@ class dumb_patrolSM(Behavior):
 	# [MANUAL_FUNC]
 	#def find_free_path_angle(self):
 		#TODO
-	def keep_turnin(turns_done)
-		_state_machine.userdata.turns_done = turns_done
-		if _state_machine.userdata.turns_done < self.total_turns:
-			return true
-		return false
+
 
 	def scan_callback(self, data): 
 		self.data = data

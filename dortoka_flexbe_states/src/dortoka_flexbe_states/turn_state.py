@@ -11,12 +11,12 @@ class TurnState(EventState):
 	AvoidObstacleState implements a couple of basic obstacle avoidance algorithms. This state allows the robot to choose a different
     to go to.
 
-    -- turn_angle   float   The angle that the robot should make
+	-- turn_angle   float   The angle that the robot should make
 	-- t_speed 	float 	Speed at which to turn the robot
 	
 	># data_IN float   Holds the remaining distance for the robot to travel
     
-    #> data_OUT float  Holds the current distance travelled.
+	#> data_OUT float  Holds the current distance travelled.
 
 	<= done 		    If turn completed successfully
 
@@ -49,8 +49,7 @@ class TurnState(EventState):
             # Based on the result, decide which outcome to trigger.
             if result_val == "done":
                 #set the output value to the input value
-                userdata.data_OUT = userdata.data_IN
-		self._state_machine.userdata.turns_done++
+                #userdata.data_OUT = userdata.data_IN
                 return 'done'
             else:
                 return 'failed'
