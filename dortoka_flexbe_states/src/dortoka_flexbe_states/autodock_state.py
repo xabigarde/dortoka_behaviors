@@ -85,7 +85,7 @@ class AutodockState(EventState):
 		# Send the goal.
 		self._error = False # make sure to reset the error state since a previous state execution might have failed
 		try:
-			self._client.send_goal(goal, self.doneCb, self.activeCb, self.feedbackCb)
+			self._client.send_goal(self._topic, goal)
 		except Exception as e:
 			# Since a state failure not necessarily causes a behavior failure, it is recommended to only print warnings, not errors.
 			# Using a linebreak before appending the error log enables the operator to collapse details in the GUI.

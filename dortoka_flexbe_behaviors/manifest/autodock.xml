@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="AutoDock">
+
+	<executable package_path="dortoka_flexbe_behaviors.autodock_sm" class="AutoDockSM" />
+	<tagstring></tagstring>
+	<author>xabi</author>
+	<date>Tue Jun 15 2021</date>
+	<description>
+		Automatically docks
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
