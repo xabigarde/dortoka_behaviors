@@ -7,12 +7,39 @@
 	<author>xabi</author>
 	<date>Tue Jun 15 2021</date>
 	<description>
-		Automatically docks
+		Automatically docks.
+Requires the following launchers to be run in separate terminals:
+$ roslaunch turtlebot_bringup minimal.launch
+$ roslaunch kobuki_auto_docking standalone.launch
 	</description>
 
 
 	<!-- Contained Behaviors -->
 
 	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="drive_speed" default="-0.2" label="drive_speed" hint="Sets the drive_speed">
+			<min value="-1.0" />
+			<max value="1.0" />
+		</param>
+
+		<param type="numeric" name="travel_distance" default="0.3" label="travel_distance" hint="Sets the travel_distance">
+			<min value="0" />
+			<max value="10.0" />
+		</param>
+
+		<param type="numeric" name="obstacle_distance" default="0.3" label="obstacle_distance" hint="Sets the obstacle_distance">
+			<min value="0" />
+			<max value="1.0" />
+		</param>
+
+		<param type="numeric" name="battery_threshold" default="164" label="battery_threshold" hint="Sets the battery_threshold">
+			<min value="0" />
+			<max value="165" />
+		</param>
+
+	</params>
+
 
 </behavior>
