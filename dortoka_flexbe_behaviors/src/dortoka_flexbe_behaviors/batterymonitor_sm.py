@@ -37,6 +37,7 @@ class BatteryMonitorSM(Behavior):
         # parameters of this behavior
         self.add_parameter('battery_threshold', 163)
         self.add_parameter('wait_time', 10)
+        self.add_parameter('autodock_timeout', 15)
 
         # references to used behaviors
 
@@ -92,11 +93,11 @@ class BatteryMonitorSM(Behavior):
                                         transitions={'done': 'WaitTillFullyCharged'},
                                         autonomy={'done': Autonomy.Off})
 
-            # x:161 y:136
+            # x:160 y:165
             OperatableStateMachine.add('Autodock',
-                                        AutodockState(),
-                                        transitions={'done': 'Charging', 'failed': 'failed'},
-                                        autonomy={'done': Autonomy.Low, 'failed': Autonomy.Off})
+                                        AutodockState(timeout=self.autodock_timeout),
+                                        transitions={'done': 'Charging', 'failed': 'failed', 'timed_out': 'FindDock'},
+                                        autonomy={'done': Autonomy.Low, 'failed': Autonomy.Off, 'timed_out': Autonomy.Off})
 
 
 

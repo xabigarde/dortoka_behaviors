@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import rospy
+
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
 
@@ -12,9 +14,9 @@ class AutodockState(EventState):
 	Automatically docks
 	'''
 
-	def __init__(self):
+	def __init__(self, timeout):
 		# See example_state.py for basic explanations.
-		super(AutodockState, self).__init__(outcomes=['done', 'failed'])
+		super(AutodockState, self).__init__(outcomes=['done', 'failed', 'timed_out'])
 
 		# Create the action client when building the behavior.
 		# This will cause the behavior to wait for the client before starting execution
@@ -23,9 +25,11 @@ class AutodockState(EventState):
 		# and makes sure only one client is used, no matter how often this state is used in a behavior.
 		self._topic = 'dock_drive_action'
 		self._client = ProxyActionClient({self._topic: AutoDockingAction}) # pass required clients as dict (topic: type)
-
+		self._timeout = timeout
 		# It may happen that the action client fails to send the action goal.
 		self._error = False
+
+		self._start_time = None
 
 		Logger.loginfo("AutoDock state initialized")
 
@@ -70,48 +74,59 @@ class AutodockState(EventState):
 			return 'failed'
 
 		# Check if the action has been finished
-		if self._client.has_result(self._topic):
-			result = self._client.get_result(self._topic)
-			Logger.loginfo("AutoDock result: %s" % result)
+		if self._client.has_feedback(self._topic):
+			feedback = self._client.get_feedback(self._topic)
+
+			##################################################
+			####### UN/COMMENT FOR DEBUGGING:   ##############
 
 			if 0:
 				print ''
-			elif result == GoalStatus.PENDING:
-				state = 'PENDING'
-			elif result == GoalStatus.ACTIVE:
-				state = 'ACTIVE'
-			elif result == GoalStatus.PREEMPTED:
-				state = 'PREEMPTED'
-			elif result == GoalStatus.SUCCEEDED:
-				state = 'SUCCEEDED'
-			elif result == GoalStatus.ABORTED:
-				state = 'ABORTED'
-			elif result == GoalStatus.REJECTED:
-				state = 'REJECTED'
-			elif result == GoalStatus.PREEMPTING:
-				state = 'PREEMPTING'
-			elif result == GoalStatus.RECALLING:
-				state = 'RECALLING'
-			elif result == GoalStatus.RECALLED:
-				state = 'RECALLED'
-			elif result == GoalStatus.LOST:
+			elif feedback.state == 'IDLE':
+				state = 'IDLE'
+			elif feedback.state == 'DONE':
+				state = 'DONE'
+			elif feedback.state == 'DOCKED_IN':
+				state = 'DOCKED_IN'
+			elif feedback.state == 'BUMPED_DOCK':
+				state = 'BUMPED_DOCK'
+			elif feedback.state == 'SCAN':
+				state = 'SCAN'
+			elif feedback.state == 'FIND_STREAM':
+				state = 'FIND_STREAM'
+			elif feedback.state == 'GET_STREAM':
+				state = 'GET_STREAM'
+			elif feedback.state == 'ALIGNED':
+				state = 'ALIGNED'
+			elif feedback.state == 'ALIGNED_FAR':
+				state = 'ALIGNED_FAR'
+			elif feedback.state == 'ALIGNED_NEAR':
+				state = 'ALIGNED_NEAR'
+			elif feedback.state == 'UNKNOWN':
+				state = 'UNKNOWN'
+			elif feedback.state == 'LOST':
 				state = 'LOST'
 			else:
-				state = 'unknown'
-			# Print state of action server
-			print 'AutoDock ActionServer Result: ' + state + ' : ' + result.status + ' ' + result.text
+				state = 'this_sucks'
+			Logger.loginfo("AutoDock feedback: %s" % feedback)
+			##################################################
 
-			if result == GoalStatus.SUCCEEDED:
+			if feedback.state in ('DOCKED_IN', 'DONE'):
 				return 'done'
-			elif result in (GoalStatus.PREEMPTED, GoalStatus.ABORTED, GoalStatus.RECALLED, GoalStatus.LOST):
+			elif feedback in ('LOST', 'UNKNOWN'):
 				return 'failed'
-			elif result in (GoalStatus.PENDING, GoalStatus.PREEMPTING, GoalStatus.RECALLING):
+			elif feedback.state in ('BUMPED_DOCK', 'BUMPED', 'SCAN', 'FIND_STREAM', 'GET_STREAM', 'ALIGNED', 'ALIGNED_FAR', 'ALIGNED_NEAR'):
 				# TODO
 				pass
-			elif result == GoalStatus.ACTIVE:
+			elif feedback == 'IDLE':
 				# TODO
 				pass
-		# If the action has not yet finished, no outcome will be returned and the state stays active.
+
+			elapsed_time = (rospy.Time.now() - self._start_time).to_sec()
+			if elapsed_time >= self._timeout:
+				return 'timed_out'
+
+	# If the action has not yet finished, no outcome will be returned and the state stays active.
 
 	def on_enter(self, userdata):
 		# When entering this state, we send the action goal once to let the robot start its work.
@@ -122,6 +137,7 @@ class AutodockState(EventState):
 		# Send the goal.
 		self._error = False # make sure to reset the error state since a previous state execution might have failed
 		try:
+			self._start_time = rospy.Time.now()
 			self._client.send_goal(self._topic, goal)
 		except Exception as e:
 			# Since a state failure not necessarily causes a behavior failure, it is recommended to only print warnings, not errors.

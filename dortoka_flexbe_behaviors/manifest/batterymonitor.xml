@@ -26,6 +26,11 @@
 			<max value="60" />
 		</param>
 
+		<param type="numeric" name="autodock_timeout" default="15" label="autodock_timeout" hint="Sets the autodock_timeout (in seconds)">
+			<min value="0" />
+			<max value="60" />
+		</param>
+
 	</params>
 
 
