@@ -8,10 +8,7 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from dortoka_flexbe_states.autodock_state import AutodockState
-from dortoka_flexbe_states.battery_monitor_state import BatteryMonitor
-from dortoka_flexbe_states.charging_state import Charging
-from dortoka_flexbe_states.find_dock_state import FindDockState
+from dortoka_flexbe_behaviors.batterymonitor_sm import BatteryMonitorSM
 from dortoka_flexbe_states.go_forward_state import GoForwardState
 from flexbe_states.wait_state import WaitState
 # Additional imports can be added inside the following tags
@@ -37,6 +34,7 @@ class Dortoka_top_levelSM(Behavior):
         # parameters of this behavior
 
         # references to used behaviors
+        self.add_behavior(BatteryMonitorSM, 'TopLevelConcurrentContainer/BatteryMonitor')
 
         # Additional initialization code can be added inside the following tags
         # [MANUAL_INIT]
@@ -62,86 +60,47 @@ class Dortoka_top_levelSM(Behavior):
         with _sm_roamingcontainer_0:
             # x:147 y:101
             OperatableStateMachine.add('GoFwd',
-                                        GoForwardState(speed=0.3, travel_dist=0.1, obstacle_dist=0.3),
+                                        GoForwardState(speed=0.2, travel_dist=0.1, obstacle_dist=0.3),
                                         transitions={'failed': 'failed', 'done': 'Wait'},
                                         autonomy={'failed': Autonomy.Off, 'done': Autonomy.Off})
 
             # x:466 y:100
             OperatableStateMachine.add('Wait',
-                                        WaitState(wait_time=60),
+                                        WaitState(wait_time=1),
+                                        transitions={'done': 'GoBackwd'},
+                                        autonomy={'done': Autonomy.Off})
+
+            # x:236 y:266
+            OperatableStateMachine.add('Wait2',
+                                        WaitState(wait_time=1),
                                         transitions={'done': 'GoFwd'},
                                         autonomy={'done': Autonomy.Off})
 
-
-        # x:325 y:379, x:314 y:199
-        _sm_gotodockprioritycontainer_1 = PriorityContainer(outcomes=['finished', 'failed'])
-
-        with _sm_gotodockprioritycontainer_1:
-            # x:59 y:32
-            OperatableStateMachine.add('FindDock',
-                                        FindDockState(),
-                                        transitions={'failed': 'failed', 'charger_found': 'Autodock'},
-                                        autonomy={'failed': Autonomy.Off, 'charger_found': Autonomy.Off})
-
-            # x:63 y:339
-            OperatableStateMachine.add('Charging',
-                                        Charging(),
-                                        transitions={'failed': 'failed', 'fully_charged': 'Undock', 'charging': 'WaitTillFullyCharged'},
-                                        autonomy={'failed': Autonomy.Off, 'fully_charged': Autonomy.Off, 'charging': Autonomy.Off})
-
-            # x:61 y:465
-            OperatableStateMachine.add('Undock',
-                                        GoForwardState(speed=-0.3, travel_dist=0.5, obstacle_dist=0.3),
-                                        transitions={'failed': 'failed', 'done': 'finished'},
+            # x:432 y:326
+            OperatableStateMachine.add('GoBackwd',
+                                        GoForwardState(speed=-0.2, travel_dist=0.1, obstacle_dist=0.3),
+                                        transitions={'failed': 'failed', 'done': 'Wait2'},
                                         autonomy={'failed': Autonomy.Off, 'done': Autonomy.Off})
 
-            # x:65 y:233
-            OperatableStateMachine.add('WaitTillFullyCharged',
-                                        WaitState(wait_time=60),
-                                        transitions={'done': 'Charging'},
-                                        autonomy={'done': Autonomy.Off})
 
-            # x:62 y:136
-            OperatableStateMachine.add('Autodock',
-                                        AutodockState(),
-                                        transitions={'done': 'WaitTillFullyCharged', 'failed': 'failed'},
-                                        autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
-
-
-        # x:703 y:96, x:264 y:280
-        _sm_batterymonitorcontainer_2 = OperatableStateMachine(outcomes=['finished', 'failed'])
-
-        with _sm_batterymonitorcontainer_2:
-            # x:113 y:91
-            OperatableStateMachine.add('BatteryMonitor',
-                                        BatteryMonitor(battery_threshold=162),
-                                        transitions={'failed': 'failed', 'low_battery': 'GoToDockPriorityContainer'},
-                                        autonomy={'failed': Autonomy.Off, 'low_battery': Autonomy.Off})
-
-            # x:351 y:86
-            OperatableStateMachine.add('GoToDockPriorityContainer',
-                                        _sm_gotodockprioritycontainer_1,
-                                        transitions={'finished': 'finished', 'failed': 'failed'},
-                                        autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
-
-
-        # x:285 y:250, x:115 y:251, x:403 y:298, x:492 y:289, x:430 y:365
-        _sm_toplevelcontainer_3 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
-                                        ('finished', [('RoamingContainer', 'finished'), ('BatteryMonitorContainer', 'finished')]),
+        # x:285 y:250, x:115 y:251, x:403 y:298, x:492 y:289, x:430 y:365, x:530 y:465
+        _sm_toplevelconcurrentcontainer_1 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
+                                        ('finished', [('RoamingContainer', 'finished')]),
                                         ('failed', [('RoamingContainer', 'failed')]),
-                                        ('failed', [('BatteryMonitorContainer', 'failed')])
+                                        ('finished', [('BatteryMonitor', 'finished')]),
+                                        ('failed', [('BatteryMonitor', 'failed')])
                                         ])
 
-        with _sm_toplevelcontainer_3:
+        with _sm_toplevelconcurrentcontainer_1:
             # x:127 y:84
             OperatableStateMachine.add('RoamingContainer',
                                         _sm_roamingcontainer_0,
                                         transitions={'finished': 'finished', 'failed': 'failed'},
                                         autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
-            # x:342 y:82
-            OperatableStateMachine.add('BatteryMonitorContainer',
-                                        _sm_batterymonitorcontainer_2,
+            # x:454 y:87
+            OperatableStateMachine.add('BatteryMonitor',
+                                        self.use_behavior(BatteryMonitorSM, 'TopLevelConcurrentContainer/BatteryMonitor'),
                                         transitions={'finished': 'finished', 'failed': 'failed'},
                                         autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
@@ -149,8 +108,8 @@ class Dortoka_top_levelSM(Behavior):
 
         with _state_machine:
             # x:256 y:68
-            OperatableStateMachine.add('TopLevelContainer',
-                                        _sm_toplevelcontainer_3,
+            OperatableStateMachine.add('TopLevelConcurrentContainer',
+                                        _sm_toplevelconcurrentcontainer_1,
                                         transitions={'finished': 'finished', 'failed': 'failed'},
                                         autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
