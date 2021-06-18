@@ -3,7 +3,7 @@ from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
 
 import actionlib
-from kobuki_msgs.msg import AutoDockingAction, AutoDockingGoal
+from kobuki_msgs.msg import AutoDockingAction, AutoDockingGoal, AutoDockingResult
 from actionlib_msgs.msg import GoalStatus
 
 
@@ -72,9 +72,45 @@ class AutodockState(EventState):
 		# Check if the action has been finished
 		if self._client.has_result(self._topic):
 			result = self._client.get_result(self._topic)
+			Logger.loginfo("AutoDock result: %s" % result)
 
-			return 'done'
+			if 0:
+				print ''
+			elif result == GoalStatus.PENDING:
+				state = 'PENDING'
+			elif result == GoalStatus.ACTIVE:
+				state = 'ACTIVE'
+			elif result == GoalStatus.PREEMPTED:
+				state = 'PREEMPTED'
+			elif result == GoalStatus.SUCCEEDED:
+				state = 'SUCCEEDED'
+			elif result == GoalStatus.ABORTED:
+				state = 'ABORTED'
+			elif result == GoalStatus.REJECTED:
+				state = 'REJECTED'
+			elif result == GoalStatus.PREEMPTING:
+				state = 'PREEMPTING'
+			elif result == GoalStatus.RECALLING:
+				state = 'RECALLING'
+			elif result == GoalStatus.RECALLED:
+				state = 'RECALLED'
+			elif result == GoalStatus.LOST:
+				state = 'LOST'
+			else:
+				state = 'unknown'
+			# Print state of action server
+			print 'AutoDock ActionServer Result: ' + state + ' : ' + result.status + ' ' + result.text
 
+			if result == GoalStatus.SUCCEEDED:
+				return 'done'
+			elif result in (GoalStatus.PREEMPTED, GoalStatus.ABORTED, GoalStatus.RECALLED, GoalStatus.LOST):
+				return 'failed'
+			elif result in (GoalStatus.PENDING, GoalStatus.PREEMPTING, GoalStatus.RECALLING):
+				# TODO
+				pass
+			elif result == GoalStatus.ACTIVE:
+				# TODO
+				pass
 		# If the action has not yet finished, no outcome will be returned and the state stays active.
 
 	def on_enter(self, userdata):
