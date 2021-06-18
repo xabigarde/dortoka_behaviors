@@ -79,36 +79,36 @@ class AutodockState(EventState):
 
 			##################################################
 			####### UN/COMMENT FOR DEBUGGING:   ##############
-
-			if 0:
-				print ''
-			elif feedback.state == 'IDLE':
-				state = 'IDLE'
-			elif feedback.state == 'DONE':
-				state = 'DONE'
-			elif feedback.state == 'DOCKED_IN':
-				state = 'DOCKED_IN'
-			elif feedback.state == 'BUMPED_DOCK':
-				state = 'BUMPED_DOCK'
-			elif feedback.state == 'SCAN':
-				state = 'SCAN'
-			elif feedback.state == 'FIND_STREAM':
-				state = 'FIND_STREAM'
-			elif feedback.state == 'GET_STREAM':
-				state = 'GET_STREAM'
-			elif feedback.state == 'ALIGNED':
-				state = 'ALIGNED'
-			elif feedback.state == 'ALIGNED_FAR':
-				state = 'ALIGNED_FAR'
-			elif feedback.state == 'ALIGNED_NEAR':
-				state = 'ALIGNED_NEAR'
-			elif feedback.state == 'UNKNOWN':
-				state = 'UNKNOWN'
-			elif feedback.state == 'LOST':
-				state = 'LOST'
-			else:
-				state = 'this_sucks'
-			Logger.loginfo("AutoDock feedback: %s" % feedback)
+			#
+			# if 0:
+			# 	print ''
+			# elif feedback.state == 'IDLE':
+			# 	state = 'IDLE'
+			# elif feedback.state == 'DONE':
+			# 	state = 'DONE'
+			# elif feedback.state == 'DOCKED_IN':
+			# 	state = 'DOCKED_IN'
+			# elif feedback.state == 'BUMPED_DOCK':
+			# 	state = 'BUMPED_DOCK'
+			# elif feedback.state == 'SCAN':
+			# 	state = 'SCAN'
+			# elif feedback.state == 'FIND_STREAM':
+			# 	state = 'FIND_STREAM'
+			# elif feedback.state == 'GET_STREAM':
+			# 	state = 'GET_STREAM'
+			# elif feedback.state == 'ALIGNED':
+			# 	state = 'ALIGNED'
+			# elif feedback.state == 'ALIGNED_FAR':
+			# 	state = 'ALIGNED_FAR'
+			# elif feedback.state == 'ALIGNED_NEAR':
+			# 	state = 'ALIGNED_NEAR'
+			# elif feedback.state == 'UNKNOWN':
+			# 	state = 'UNKNOWN'
+			# elif feedback.state == 'LOST':
+			# 	state = 'LOST'
+			# else:
+			# 	state = 'this_sucks'
+			# Logger.loginfo("AutoDock feedback: %s" % feedback)
 			##################################################
 
 			if feedback.state in ('DOCKED_IN', 'DONE'):
