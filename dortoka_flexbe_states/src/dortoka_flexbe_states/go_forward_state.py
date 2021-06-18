@@ -22,6 +22,9 @@ class GoForwardState(EventState):
         self.scan_sub = ProxySubscriberCached({self.scan_topic: LaserScan})
         self.scan_sub.set_callback(self.scan_topic, self.scan_callback)
 
+        Logger.loginfo('GoForward state initialized')
+
+
     def execute(self, userdata):
         if not self.cmd_pub:
             return 'failed'
@@ -34,7 +37,7 @@ class GoForwardState(EventState):
         elapsed_time = (rospy.Time.now() - self._start_time).to_sec()
         distance_travelled = elapsed_time * abs(self._speed)
 
-        Logger.loginfo("Distance travelled: %s" % distance_travelled)
+        #Logger.loginfo("Distance travelled: %s" % distance_travelled)
 
         if distance_travelled >= self._travel_dist:
             return 'done'
@@ -63,3 +66,4 @@ class GoForwardState(EventState):
 
     def scan_callback(self, data):
         self.data = data
+        self.scan_sub.remove_last_msg(self.scan_topic, True)

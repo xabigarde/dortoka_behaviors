@@ -27,6 +27,8 @@ class AutodockState(EventState):
 		# It may happen that the action client fails to send the action goal.
 		self._error = False
 
+		Logger.loginfo("AutoDock state initialized")
+
 	# def doneCb(self, status, result):
 	# 	if 0:
 	# 		print ''

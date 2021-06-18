@@ -35,6 +35,8 @@ class BatteryMonitorSM(Behavior):
         self.name = 'BatteryMonitor'
 
         # parameters of this behavior
+        self.add_parameter('battery_threshold', 163)
+        self.add_parameter('wait_time', 10)
 
         # references to used behaviors
 
@@ -56,7 +58,7 @@ class BatteryMonitorSM(Behavior):
         
         # [/MANUAL_CREATE]
 
-        # x:30 y:465, x:130 y:465
+        # x:212 y:582, x:671 y:214
         _sm_gotodockprioritycontainer_0 = PriorityContainer(outcomes=['finished', 'failed'])
 
         with _sm_gotodockprioritycontainer_0:
@@ -64,45 +66,51 @@ class BatteryMonitorSM(Behavior):
             OperatableStateMachine.add('FindDock',
                                         FindDockState(),
                                         transitions={'failed': 'failed', 'charger_found': 'Autodock'},
-                                        autonomy={'failed': Autonomy.Off, 'charger_found': Autonomy.Off})
+                                        autonomy={'failed': Autonomy.Off, 'charger_found': Autonomy.Low})
 
-            # x:63 y:339
+            # x:5 y:239
+            OperatableStateMachine.add('BackOff',
+                                        GoForwardState(speed=-0.1, travel_dist=0.1, obstacle_dist=0.3),
+                                        transitions={'failed': 'failed', 'done': 'FindDock'},
+                                        autonomy={'failed': Autonomy.Off, 'done': Autonomy.Low})
+
+            # x:177 y:350
             OperatableStateMachine.add('Charging',
                                         Charging(),
-                                        transitions={'failed': 'failed', 'fully_charged': 'Undock', 'charging': 'WaitTillFullyCharged'},
-                                        autonomy={'failed': Autonomy.Off, 'fully_charged': Autonomy.Off, 'charging': Autonomy.Off})
+                                        transitions={'failed': 'failed', 'fully_charged': 'Undock', 'charging': 'Charging', 'discharging': 'BackOff'},
+                                        autonomy={'failed': Autonomy.Off, 'fully_charged': Autonomy.Low, 'charging': Autonomy.Off, 'discharging': Autonomy.Low})
 
-            # x:61 y:465
+            # x:175 y:464
             OperatableStateMachine.add('Undock',
-                                        GoForwardState(speed=-0.3, travel_dist=0.5, obstacle_dist=0.3),
+                                        GoForwardState(speed=-0.1, travel_dist=0.5, obstacle_dist=0.3),
                                         transitions={'failed': 'failed', 'done': 'finished'},
-                                        autonomy={'failed': Autonomy.Off, 'done': Autonomy.Off})
+                                        autonomy={'failed': Autonomy.Off, 'done': Autonomy.Low})
 
-            # x:65 y:233
+            # x:305 y:245
             OperatableStateMachine.add('WaitTillFullyCharged',
-                                        WaitState(wait_time=60),
-                                        transitions={'done': 'Charging'},
+                                        WaitState(wait_time=self.wait_time),
+                                        transitions={'done': 'WaitTillFullyCharged'},
                                         autonomy={'done': Autonomy.Off})
 
-            # x:62 y:136
+            # x:161 y:136
             OperatableStateMachine.add('Autodock',
                                         AutodockState(),
-                                        transitions={'done': 'WaitTillFullyCharged', 'failed': 'failed'},
-                                        autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+                                        transitions={'done': 'Charging', 'failed': 'failed'},
+                                        autonomy={'done': Autonomy.Low, 'failed': Autonomy.Off})
 
 
 
         with _state_machine:
             # x:113 y:91
             OperatableStateMachine.add('BatteryMonitor',
-                                        BatteryMonitor(battery_threshold=162),
-                                        transitions={'failed': 'failed', 'low_battery': 'GoToDockPriorityContainer'},
-                                        autonomy={'failed': Autonomy.Off, 'low_battery': Autonomy.Off})
+                                        BatteryMonitor(battery_threshold=self.battery_threshold),
+                                        transitions={'failed': 'failed', 'low_battery': 'GoToDockPriorityContainer', 'already_docked': 'GoToDockPriorityContainer'},
+                                        autonomy={'failed': Autonomy.Off, 'low_battery': Autonomy.Low, 'already_docked': Autonomy.Low})
 
             # x:372 y:86
             OperatableStateMachine.add('GoToDockPriorityContainer',
                                         _sm_gotodockprioritycontainer_0,
-                                        transitions={'finished': 'finished', 'failed': 'failed'},
+                                        transitions={'finished': 'BatteryMonitor', 'failed': 'failed'},
                                         autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
